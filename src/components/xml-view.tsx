@@ -20,7 +20,7 @@ export function XmlView({ xml, query }: { xml: string; query: string }) {
   const lines = useMemo(() => pretty.split("\n"), [pretty]);
 
   return (
-    <pre className="overflow-x-auto rounded-lg border border-edge bg-surface-1 p-4 font-mono text-xs leading-5">
+    <pre className="overflow-x-auto rounded-lg border border-edge bg-surface-1 p-4 font-mono text-sm leading-6">
       {lines.map((line, i) => (
         <div key={i}>{renderLine(line, termRegex)}</div>
       ))}

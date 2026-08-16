@@ -18,7 +18,7 @@ export function NavLinks({ items }: { items: NavItem[] }) {
           <Link
             key={item.href}
             href={item.href}
-            className={`rounded px-2.5 py-1.5 text-[13px] transition-colors ${
+            className={`rounded px-2.5 py-1.5 text-xs transition-colors ${
               active
                 ? "bg-surface-3 text-ink"
                 : "text-ink-dim hover:bg-surface-2 hover:text-ink"

@@ -213,7 +213,7 @@ export function RecordingsSearch({ canPlay }: { canPlay: boolean }) {
         </p>
       )}
 
-      <div className="flex items-center gap-2 border-b border-edge px-3 pb-1.5 font-mono text-[10px] tracking-widest text-ink-faint uppercase">
+      <div className="flex items-center gap-2 border-b border-edge px-3 pb-1.5 font-mono text-[11px] tracking-widest text-ink-faint uppercase">
         <span className="w-36">Started</span>
         <span className="w-16">Dir</span>
         <span className="w-40">Other party</span>
@@ -250,7 +250,7 @@ export function RecordingsSearch({ canPlay }: { canPlay: boolean }) {
                 onClick={() => setSelected(i)}
                 onDoubleClick={() => play(row)}
                 style={{ position: "absolute", top: i * ROW_H, height: ROW_H }}
-                className={`flex w-full cursor-default items-center gap-2 rounded px-3 font-mono text-[11px] ${
+                className={`flex w-full cursor-default items-center gap-2 rounded px-3 text-xs ${
                   i === selected
                     ? "bg-surface-2 ring-1 ring-edge-strong"
                     : "hover:bg-surface-1"
@@ -266,7 +266,9 @@ export function RecordingsSearch({ canPlay }: { canPlay: boolean }) {
                 >
                   {row.direction ?? "—"}
                 </span>
-                <span className="w-40 truncate">{row.other_party ?? "—"}</span>
+                <span className="w-40 truncate font-mono">
+                  {row.other_party ?? "—"}
+                </span>
                 <span className="w-12 truncate text-ink-dim">
                   {row.extension ?? "—"}
                 </span>
@@ -281,14 +283,14 @@ export function RecordingsSearch({ canPlay }: { canPlay: boolean }) {
                           e.stopPropagation();
                           play(row);
                         }}
-                        className="rounded px-2 py-0.5 text-[10px] text-ink-dim transition-colors hover:bg-surface-3 hover:text-ink"
+                        className="rounded px-2 py-0.5 text-[11px] text-ink-dim transition-colors hover:bg-surface-3 hover:text-ink"
                       >
                         ▶ play
                       </button>
                       <a
                         href={`/api/files/${row.stored_file_id}/download`}
                         onClick={(e) => e.stopPropagation()}
-                        className="rounded px-2 py-0.5 text-[10px] text-ink-dim transition-colors hover:bg-surface-3 hover:text-ink"
+                        className="rounded px-2 py-0.5 text-[11px] text-ink-dim transition-colors hover:bg-surface-3 hover:text-ink"
                       >
                         ↓
                       </a>
@@ -300,7 +302,7 @@ export function RecordingsSearch({ canPlay }: { canPlay: boolean }) {
           })}
         </div>
         {loadingMore && (
-          <div className="py-2 text-center font-mono text-[10px] text-ink-faint">
+          <div className="py-2 text-center font-mono text-[11px] text-ink-faint">
             loading…
           </div>
         )}
@@ -308,13 +310,13 @@ export function RecordingsSearch({ canPlay }: { canPlay: boolean }) {
 
       {playing && (
         <div className="flex items-center gap-3 rounded-lg border border-edge bg-surface-1 px-3 py-2">
-          <div className="min-w-0 font-mono text-[11px]">
+          <div className="min-w-0 font-mono text-xs">
             <div className="truncate text-ink">
               {playing.direction === "incoming"
                 ? `${playing.other_party ?? "?"} → ext ${playing.extension ?? "?"}`
                 : `ext ${playing.extension ?? "?"} → ${playing.other_party ?? "?"}`}
             </div>
-            <div className="text-[10px] text-ink-faint">
+            <div className="text-[11px] text-ink-faint">
               {playing.started_at?.slice(0, 16)} ·{" "}
               {formatBytes(playing.size_bytes)}
             </div>

@@ -43,7 +43,7 @@ export default async function DocumentPage({
           <span className="font-mono text-xs text-accent">{file.retailer}</span>
         )}
         {file.doc_type && (
-          <span className="rounded bg-surface-3 px-1.5 py-0.5 font-mono text-[10px] text-ink-dim">
+          <span className="rounded bg-surface-3 px-1.5 py-0.5 font-mono text-[11px] text-ink-dim">
             {file.doc_type}
           </span>
         )}
@@ -55,7 +55,7 @@ export default async function DocumentPage({
             PO {file.po_number}
           </Link>
         )}
-        <span className="font-mono text-[11px] text-ink-faint">
+        <span className="font-mono text-xs text-ink-faint">
           {formatBytes(file.size_bytes)}
         </span>
         <div className="ml-auto">
@@ -71,7 +71,7 @@ export default async function DocumentPage({
       </div>
 
       <p
-        className="truncate font-mono text-[11px] text-ink-faint"
+        className="truncate font-mono text-xs text-ink-faint"
         title={file.object_key}
       >
         {file.object_key}

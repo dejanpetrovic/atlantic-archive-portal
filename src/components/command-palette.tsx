@@ -139,7 +139,7 @@ export function CommandPalette({ surfaces }: { surfaces: PaletteSurfaces }) {
               }`}
             >
               <span
-                className={`shrink-0 rounded px-1.5 py-0.5 font-mono text-[9px] tracking-wider uppercase ${kindTone(cmd.kind)}`}
+                className={`shrink-0 rounded px-1.5 py-0.5 font-mono text-[11px] tracking-wider uppercase ${kindTone(cmd.kind)}`}
               >
                 {cmd.kind}
               </span>
@@ -147,20 +147,20 @@ export function CommandPalette({ surfaces }: { surfaces: PaletteSurfaces }) {
                 <span className="block truncate text-ink">{cmd.label}</span>
                 {cmd.snippet && (
                   <span
-                    className="block truncate text-[11px] text-ink-dim"
+                    className="block truncate text-xs text-ink-dim"
                     dangerouslySetInnerHTML={{ __html: cmd.snippet }}
                   />
                 )}
               </span>
               {cmd.hint && (
-                <span className="ml-auto shrink-0 font-mono text-[10px] text-ink-faint">
+                <span className="ml-auto shrink-0 font-mono text-[11px] text-ink-faint">
                   {cmd.hint}
                 </span>
               )}
             </button>
           ))}
         </div>
-        <div className="flex gap-3 border-t border-edge px-4 py-2 font-mono text-[10px] text-ink-faint">
+        <div className="flex gap-3 border-t border-edge px-4 py-2 font-mono text-[11px] text-ink-faint">
           <span>↑↓ navigate</span>
           <span>↵ open</span>
           <span>esc close</span>

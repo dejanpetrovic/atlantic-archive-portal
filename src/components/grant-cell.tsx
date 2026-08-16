@@ -30,7 +30,7 @@ export function GrantCell({
 
   if (!canManage) {
     return (
-      <span className={`font-mono text-[11px] ${LEVEL_COLORS[effective] ?? ""}`}>
+      <span className={`font-mono text-xs ${LEVEL_COLORS[effective] ?? ""}`}>
         {effective}
       </span>
     );
@@ -53,7 +53,7 @@ export function GrantCell({
         value={override ?? ""}
         onChange={(e) => onChange(e.target.value)}
         disabled={pending}
-        className={`rounded border bg-surface-1 px-1 py-0.5 font-mono text-[11px] outline-none focus:border-accent-dim disabled:opacity-50 ${
+        className={`rounded border bg-surface-1 px-1 py-0.5 font-mono text-xs outline-none focus:border-accent-dim disabled:opacity-50 ${
           override ? "border-accent-dim" : "border-edge"
         } ${LEVEL_COLORS[effective] ?? ""}`}
         title={
@@ -68,7 +68,7 @@ export function GrantCell({
         <option value="download">download</option>
         <option value="manage">manage</option>
       </select>
-      {error && <span className="text-[10px] text-bad">failed</span>}
+      {error && <span className="text-[11px] text-bad">failed</span>}
     </span>
   );
 }

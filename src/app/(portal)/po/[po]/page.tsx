@@ -59,46 +59,63 @@ export default async function PoPage({
 
       {documents.length > 0 && (
         <section>
-          <h2 className="mb-2 font-mono text-[10px] tracking-widest text-ink-faint uppercase">
+          <h2 className="mb-2 font-mono text-[11px] tracking-widest text-ink-faint uppercase">
             Documents · {documents.length}
           </h2>
           <div className="space-y-px">
-            {documents.map((d) => (
-              <Link
-                key={d.id}
-                href={
-                  d.bucket === "acid-retailer-docs"
-                    ? `/documents/${d.id}`
-                    : `/order-docs/${d.id}`
-                }
-                className="flex items-center gap-2 rounded px-3 py-2 font-mono text-[11px] transition-colors hover:bg-surface-1"
-              >
-                <span className="text-ink-dim">
-                  {d.document_date ?? d.uploaded_at?.slice(0, 10) ?? "no date"}
-                </span>
-                {d.retailer && <span className="text-accent">{d.retailer}</span>}
-                {d.doc_type && (
-                  <span className="rounded bg-surface-3 px-1.5 py-0.5 text-[10px] text-ink-dim">
-                    {d.doc_type}
-                  </span>
-                )}
-                <span
-                  className={`rounded px-1.5 py-0.5 text-[10px] ${
+            {documents.map((d) => {
+              const siblings = (d.po_number ?? "")
+                .split(",")
+                .map((s) => s.trim())
+                .filter((s) => s && s !== po);
+              return (
+                <Link
+                  key={d.id}
+                  href={
                     d.bucket === "acid-retailer-docs"
-                      ? "bg-link/15 text-link"
-                      : "bg-warn/15 text-warn"
-                  }`}
+                      ? `/documents/${d.id}`
+                      : `/order-docs/${d.id}`
+                  }
+                  className="flex items-center gap-2 rounded px-3 py-2 text-xs transition-colors hover:bg-surface-1"
                 >
-                  {d.bucket === "acid-retailer-docs" ? "EDI" : "order doc"}
-                </span>
-                <span className="ml-auto truncate pl-4 text-[10px] text-ink-faint">
-                  {d.object_key.split("/").pop()}
-                </span>
-                <span className="shrink-0 text-[10px] text-ink-faint">
-                  {formatBytes(d.size_bytes)}
-                </span>
-              </Link>
-            ))}
+                  <span className="text-ink-dim">
+                    {d.document_date ?? d.uploaded_at?.slice(0, 10) ?? "no date"}
+                  </span>
+                  {d.retailer && (
+                    <span className="text-accent">{d.retailer}</span>
+                  )}
+                  {d.doc_type && (
+                    <span className="rounded bg-surface-3 px-1.5 py-0.5 text-xs text-ink-dim">
+                      {d.doc_type}
+                    </span>
+                  )}
+                  <span
+                    className={`rounded px-1.5 py-0.5 text-xs ${
+                      d.bucket === "acid-retailer-docs"
+                        ? "bg-link/15 text-link"
+                        : "bg-warn/15 text-warn"
+                    }`}
+                  >
+                    {d.bucket === "acid-retailer-docs" ? "EDI" : "order doc"}
+                  </span>
+                  {siblings.length > 0 && (
+                    <span
+                      className="rounded bg-accent/15 px-1.5 py-0.5 font-mono text-xs text-accent"
+                      title={`This document also covers PO ${siblings.join(", ")}`}
+                    >
+                      +{siblings.length} PO{siblings.length > 1 ? "s" : ""}:{" "}
+                      {siblings.join(", ")}
+                    </span>
+                  )}
+                  <span className="ml-auto truncate pl-4 font-mono text-xs text-ink-faint">
+                    {d.object_key.split("/").pop()}
+                  </span>
+                  <span className="shrink-0 text-xs text-ink-faint">
+                    {formatBytes(d.size_bytes)}
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}
@@ -138,7 +155,7 @@ function Timeline({ row }: { row: PoLifecycle }) {
                     {stage.label}
                   </span>
                 </div>
-                <div className="mt-0.5 pl-[15px] font-mono text-[10px] text-ink-dim">
+                <div className="mt-0.5 pl-[15px] font-mono text-[11px] text-ink-dim">
                   {done ? formatTs(at) : "pending"}
                 </div>
               </div>

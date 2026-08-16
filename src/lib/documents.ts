@@ -79,7 +79,9 @@ export async function searchDocuments(
       list.push(sql`retailer = ${p.retailer}`);
     if (p.docType && opts.docType !== false)
       list.push(sql`doc_type = ${p.docType}`);
-    if (p.poNumber) list.push(sql`po_number = ${p.poNumber}`);
+    // po_number can be a comma-separated list on multi-PO documents.
+    if (p.poNumber)
+      list.push(sql`${p.poNumber} = any(string_to_array(po_number, ','))`);
     if (p.dateFrom) list.push(sql`document_date >= ${p.dateFrom}::date`);
     if (p.dateTo) list.push(sql`document_date <= ${p.dateTo}::date`);
     return list.reduce((a, b) => sql`${a} and ${b}`);

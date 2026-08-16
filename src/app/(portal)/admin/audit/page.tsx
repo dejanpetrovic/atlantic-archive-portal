@@ -101,7 +101,7 @@ export default async function AuditPage({
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs">
           <thead>
-            <tr className="border-b border-edge font-mono text-[10px] tracking-widest text-ink-faint uppercase">
+            <tr className="border-b border-edge font-mono text-[11px] tracking-widest text-ink-faint uppercase">
               <th className="py-2 pr-3 font-normal">At</th>
               <th className="py-2 pr-3 font-normal">User</th>
               <th className="py-2 pr-3 font-normal">Action</th>
@@ -119,21 +119,21 @@ export default async function AuditPage({
             )}
             {rows.map((r, i) => (
               <tr key={i} className="border-b border-edge/50 hover:bg-surface-1">
-                <td className="py-1.5 pr-3 font-mono text-[11px] whitespace-nowrap text-ink-dim">
+                <td className="py-1.5 pr-3 font-mono text-xs whitespace-nowrap text-ink-dim">
                   {r.at.slice(0, 19).replace("T", " ")}
                 </td>
                 <td className="py-1.5 pr-3">{r.email ?? r.user_id}</td>
                 <td className="py-1.5 pr-3">
-                  <span className="rounded bg-surface-3 px-1.5 py-0.5 font-mono text-[10px]">
+                  <span className="rounded bg-surface-3 px-1.5 py-0.5 font-mono text-[11px]">
                     {r.action}
                   </span>
                 </td>
-                <td className="py-1.5 pr-3 font-mono text-[11px] text-ink-dim">
+                <td className="py-1.5 pr-3 font-mono text-xs text-ink-dim">
                   {r.vault?.replace("acid-", "") ?? "—"}
                 </td>
                 <td className="max-w-md py-1.5 pr-3">
                   <span
-                    className="block truncate font-mono text-[11px] text-ink-faint"
+                    className="block truncate font-mono text-xs text-ink-faint"
                     title={r.object_key ?? r.detail ?? ""}
                   >
                     {r.object_key ?? r.detail ?? "—"}

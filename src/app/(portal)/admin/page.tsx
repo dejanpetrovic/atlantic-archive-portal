@@ -27,7 +27,7 @@ export default async function AdminUsersPage() {
     <div className="overflow-x-auto">
       <table className="w-full text-left text-xs">
         <thead>
-          <tr className="border-b border-edge font-mono text-[10px] tracking-widest text-ink-faint uppercase">
+          <tr className="border-b border-edge font-mono text-[11px] tracking-widest text-ink-faint uppercase">
             <th className="py-2 pr-3 font-normal">User</th>
             <th className="py-2 pr-3 font-normal">Role</th>
             <th className="py-2 pr-3 font-normal">Active</th>
@@ -48,7 +48,7 @@ export default async function AdminUsersPage() {
               <td className="py-1.5 pr-3">
                 <span className="text-ink">{u.email ?? u.user_id}</span>
               </td>
-              <td className="py-1.5 pr-3 font-mono text-[11px] text-ink-dim">
+              <td className="py-1.5 pr-3 font-mono text-xs text-ink-dim">
                 {u.role ?? "—"}
               </td>
               <td className="py-1.5 pr-3">
@@ -58,7 +58,7 @@ export default async function AdminUsersPage() {
                   <span className="text-ok">active</span>
                 )}
               </td>
-              <td className="py-1.5 pr-3 font-mono text-[11px] text-ink-dim">
+              <td className="py-1.5 pr-3 font-mono text-xs text-ink-dim">
                 {u.last_sign_in_at?.slice(0, 16).replace("T", " ") ?? "never"}
               </td>
               {VAULTS.map((v) => (
@@ -76,7 +76,7 @@ export default async function AdminUsersPage() {
           ))}
         </tbody>
       </table>
-      <p className="mt-3 text-[11px] text-ink-faint">
+      <p className="mt-3 text-xs text-ink-faint">
         Levels come from role defaults unless an explicit grant is set
         (outlined selects). “default” deletes the override row.
       </p>

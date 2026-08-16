@@ -20,6 +20,8 @@ export type PoDocument = {
   uploaded_at: string | null;
   object_key: string;
   size_bytes: number | null;
+  /** Raw po_number — may be a comma-separated list for multi-PO documents. */
+  po_number: string | null;
 };
 
 // One row per retailer+PO — the same PO can exist at several retailers.
@@ -44,9 +46,9 @@ export async function getPoDocuments(
   const rows = await sql`
     select id::text as id, bucket, retailer, doc_type,
            document_date::text as document_date, uploaded_at::text as uploaded_at,
-           object_key, size_bytes
+           object_key, size_bytes, po_number
     from file_vault.stored_files
-    where po_number = ${po} and bucket in ${sql(vaults)}
+    where ${po} = any(string_to_array(po_number, ',')) and bucket in ${sql(vaults)}
     order by coalesce(document_date, uploaded_at::date, '0001-01-01'::date) desc,
              uploaded_at desc nulls last
   `;

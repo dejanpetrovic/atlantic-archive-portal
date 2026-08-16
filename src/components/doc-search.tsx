@@ -232,7 +232,7 @@ export function DocSearch({
               spellCheck={false}
               className="w-full rounded-md border border-edge bg-surface-1 px-3 py-2 outline-none transition-colors focus:border-accent-dim focus:bg-surface-2"
             />
-            <kbd className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 rounded border border-edge bg-surface-2 px-1.5 font-mono text-[10px] text-ink-faint">
+            <kbd className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 rounded border border-edge bg-surface-2 px-1.5 font-mono text-[11px] text-ink-faint">
               /
             </kbd>
           </div>
@@ -289,7 +289,7 @@ export function DocSearch({
 
 function FacetTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="mb-1.5 font-mono text-[10px] tracking-widest text-ink-faint uppercase">
+    <h3 className="mb-1.5 font-mono text-[11px] tracking-widest text-ink-faint uppercase">
       {children}
     </h3>
   );
@@ -322,7 +322,7 @@ function Facet({
               }`}
             >
               <span className="truncate">{item.value}</span>
-              <span className="ml-2 font-mono text-[10px] text-ink-faint">
+              <span className="ml-2 font-mono text-[11px] text-ink-faint">
                 {item.count.toLocaleString()}
               </span>
             </button>
@@ -354,16 +354,16 @@ function ResultRow({
         selected ? "bg-surface-2 ring-1 ring-edge-strong" : "hover:bg-surface-1"
       }`}
     >
-      <div className="flex items-center gap-2 font-mono text-[11px]">
+      <div className="flex items-center gap-2 font-mono text-xs">
         <span className="text-ink-dim">{row.document_date ?? "no date"}</span>
         {row.retailer && <span className="text-accent">{row.retailer}</span>}
         {row.doc_type && (
-          <span className="rounded bg-surface-3 px-1.5 py-0.5 text-[10px] text-ink-dim">
+          <span className="rounded bg-surface-3 px-1.5 py-0.5 text-[11px] text-ink-dim">
             {row.doc_type}
           </span>
         )}
         {showSearchableBadge && row.searchable && (
-          <span className="rounded bg-ok/15 px-1.5 py-0.5 text-[10px] text-ok">
+          <span className="rounded bg-ok/15 px-1.5 py-0.5 text-[11px] text-ok">
             searchable
           </span>
         )}
@@ -376,7 +376,7 @@ function ResultRow({
             PO {row.po_number}
           </Link>
         )}
-        <span className="ml-auto text-[10px] text-ink-faint">
+        <span className="ml-auto text-[11px] text-ink-faint">
           {formatBytes(row.size_bytes)}
         </span>
       </div>
@@ -386,7 +386,7 @@ function ResultRow({
           dangerouslySetInnerHTML={{ __html: row.snippet }}
         />
       ) : (
-        <p className="mt-1 truncate font-mono text-[11px] text-ink-faint">
+        <p className="mt-1 truncate font-mono text-xs text-ink-faint">
           {row.object_key}
         </p>
       )}

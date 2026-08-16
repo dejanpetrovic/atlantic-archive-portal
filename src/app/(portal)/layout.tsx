@@ -1,6 +1,7 @@
 import { atLeast, getNavLevels, isAdmin, requireUser } from "@/lib/authz";
 import { NavLinks, type NavItem } from "@/components/nav-links";
 import { CommandPalette } from "@/components/command-palette";
+import { ThemeToggle } from "@/components/theme-toggle";
 import Link from "next/link";
 import { logout } from "@/app/login/actions";
 
@@ -31,25 +32,26 @@ export default async function PortalLayout({
       <header className="sticky top-0 z-40 border-b border-edge bg-surface-0/90 backdrop-blur">
         <div className="mx-auto flex h-12 max-w-7xl items-center gap-6 px-4">
           <Link href="/" className="flex items-baseline gap-2">
-            <span className="font-mono text-[11px] tracking-[0.25em] text-accent">
+            <span className="font-mono text-xs tracking-[0.25em] text-accent">
               ATLANTIC
             </span>
-            <span className="text-[13px] font-medium text-ink-dim">
+            <span className="text-xs font-medium text-ink-dim">
               archive
             </span>
           </Link>
           <NavLinks items={items} />
           <div className="ml-auto flex items-center gap-3">
-            <kbd className="hidden rounded border border-edge bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] text-ink-faint sm:block">
+            <kbd className="hidden rounded border border-edge bg-surface-2 px-1.5 py-0.5 font-mono text-xs text-ink-faint sm:block">
               ⌘K
             </kbd>
-            <span className="hidden font-mono text-[11px] text-ink-faint sm:block">
+            <ThemeToggle />
+            <span className="hidden text-xs text-ink-faint sm:block">
               {user.email}
             </span>
             <form action={logout}>
               <button
                 type="submit"
-                className="rounded px-2 py-1 text-[12px] text-ink-dim transition-colors hover:bg-surface-2 hover:text-ink"
+                className="rounded px-2 py-1 text-xs text-ink-dim transition-colors hover:bg-surface-2 hover:text-ink"
               >
                 Sign out
               </button>

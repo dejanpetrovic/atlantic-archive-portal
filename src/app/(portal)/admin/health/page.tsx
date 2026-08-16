@@ -31,7 +31,7 @@ export default async function HealthPage() {
   return (
     <div className="space-y-6">
       <section>
-        <h2 className="mb-2 font-mono text-[10px] tracking-widest text-ink-faint uppercase">
+        <h2 className="mb-2 font-mono text-[11px] tracking-widest text-ink-faint uppercase">
           Archive lag
         </h2>
         <div className="grid gap-3 sm:grid-cols-3">
@@ -40,13 +40,13 @@ export default async function HealthPage() {
               key={l.bucket}
               className="rounded-lg border border-edge bg-surface-1 p-4"
             >
-              <div className="font-mono text-[11px] text-ink-dim">
+              <div className="font-mono text-xs text-ink-dim">
                 {l.bucket}
               </div>
               <div className="mt-1 text-lg font-semibold">
                 {lagBadge(l.lag_minutes)}
               </div>
-              <div className="mt-1 font-mono text-[10px] text-ink-faint">
+              <div className="mt-1 font-mono text-[11px] text-ink-faint">
                 {l.file_count.toLocaleString()} files · newest{" "}
                 {l.newest_upload?.slice(0, 16).replace("T", " ") ?? "—"}
               </div>
@@ -56,7 +56,7 @@ export default async function HealthPage() {
       </section>
 
       <section>
-        <h2 className="mb-2 font-mono text-[10px] tracking-widest text-ink-faint uppercase">
+        <h2 className="mb-2 font-mono text-[11px] tracking-widest text-ink-faint uppercase">
           Reconciliation runs · latest {runs.length}
         </h2>
         {runs.length === 0 ? (
@@ -67,7 +67,7 @@ export default async function HealthPage() {
           <div className="overflow-x-auto rounded-lg border border-edge">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-edge bg-surface-1 font-mono text-[10px] tracking-widest text-ink-faint uppercase">
+                <tr className="border-b border-edge bg-surface-1 font-mono text-[11px] tracking-widest text-ink-faint uppercase">
                   {runColumns.map((c) => (
                     <th key={c} className="px-3 py-2 font-normal">
                       {c}
@@ -81,7 +81,7 @@ export default async function HealthPage() {
                     {runColumns.map((c) => (
                       <td
                         key={c}
-                        className="max-w-xs truncate px-3 py-1.5 font-mono text-[11px] text-ink-dim"
+                        className="max-w-xs truncate px-3 py-1.5 font-mono text-xs text-ink-dim"
                         title={String(run[c] ?? "")}
                       >
                         {formatCell(run[c])}
