@@ -1,5 +1,6 @@
 import { atLeast, getNavLevels, isAdmin, requireUser } from "@/lib/authz";
 import { NavLinks, type NavItem } from "@/components/nav-links";
+import Link from "next/link";
 import { logout } from "@/app/login/actions";
 
 export default async function PortalLayout({
@@ -28,14 +29,14 @@ export default async function PortalLayout({
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b border-edge bg-surface-0/90 backdrop-blur">
         <div className="mx-auto flex h-12 max-w-7xl items-center gap-6 px-4">
-          <a href="/" className="flex items-baseline gap-2">
+          <Link href="/" className="flex items-baseline gap-2">
             <span className="font-mono text-[11px] tracking-[0.25em] text-accent">
               ATLANTIC
             </span>
             <span className="text-[13px] font-medium text-ink-dim">
               archive
             </span>
-          </a>
+          </Link>
           <NavLinks items={items} />
           <div className="ml-auto flex items-center gap-3">
             <span className="hidden font-mono text-[11px] text-ink-faint sm:block">
