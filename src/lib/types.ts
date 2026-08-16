@@ -25,12 +25,11 @@ export type DocSearchResponse = {
 export type RecordingRow = {
   id: string;
   stored_file_id: string | null;
-  from_number: string | null;
-  to_number: string | null;
+  other_party: string | null;
   direction: string | null;
   extension: string | null;
   started_at: string | null;
-  duration_seconds: number | null;
+  size_bytes: number | null;
   recording_id: string | null;
 };
 

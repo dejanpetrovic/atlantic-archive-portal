@@ -2,9 +2,9 @@ import "server-only";
 import { db } from "./db";
 import { VAULTS, type Level, type Vault } from "./authz";
 
-// users_overview is assumed to expose user_id, email, role, active and
-// last_sign_in_at; effective levels are computed live via effective_level
-// rather than trusting view columns.
+// users_overview exposes user_id, email, full_name, role, active,
+// last_sign_in_at plus per-vault level columns; effective levels are still
+// computed live via effective_level so grant edits reflect immediately.
 export type AdminUser = {
   user_id: string;
   email: string | null;

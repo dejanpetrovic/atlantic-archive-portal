@@ -25,11 +25,11 @@ export type PoDocument = {
 // One row per retailer+PO — the same PO can exist at several retailers.
 export async function getPoLifecycle(po: string): Promise<PoLifecycle[]> {
   const rows = await db()`
-    select retailer, po_number,
+    select retailer, po as po_number,
            ordered_at::text as ordered_at, acked_at::text as acked_at,
            shipped_at::text as shipped_at, invoiced_at::text as invoiced_at
     from file_vault.po_lifecycle
-    where po_number = ${po}
+    where po = ${po}
     order by retailer
   `;
   return rows as unknown as PoLifecycle[];

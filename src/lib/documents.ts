@@ -24,7 +24,7 @@ export function snippetToHtml(raw: string | null): string | null {
     .replaceAll(HL_STOP, "</mark>");
 }
 
-// Keyset cursor over (document_date desc nulls-as-epoch, id::text desc).
+// Keyset cursor over (document_date desc nulls-as-epoch, id desc).
 const DATE_FLOOR = "0001-01-01";
 
 export function encodeCursor(d: string | null, i: string): string {
@@ -39,7 +39,7 @@ export function decodeCursor(
     const { d, i } = JSON.parse(
       Buffer.from(cursor, "base64url").toString("utf8"),
     ) as { d: string | null; i: string };
-    if (typeof i !== "string") return null;
+    if (typeof i !== "string" || !/^\d+$/.test(i)) return null;
     const date = d ?? DATE_FLOOR;
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
     return { d: date, i };
@@ -87,7 +87,7 @@ export async function searchDocuments(
 
   const cur = decodeCursor(p.cursor);
   const cursorCond = cur
-    ? sql`and (coalesce(document_date, ${DATE_FLOOR}::date), id::text) < (${cur.d}::date, ${cur.i})`
+    ? sql`and (coalesce(document_date, ${DATE_FLOOR}::date), id) < (${cur.d}::date, ${cur.i}::bigint)`
     : sql``;
 
   const headlineOpts = `StartSel="${HL_START}", StopSel="${HL_STOP}", MaxWords=32, MinWords=12, MaxFragments=2, FragmentDelimiter=" … "`;
@@ -103,7 +103,7 @@ export async function searchDocuments(
              ${snippetExpr} as snippet
       from file_vault.stored_files
       where ${conds({})} ${cursorCond}
-      order by coalesce(document_date, ${DATE_FLOOR}::date) desc, id::text desc
+      order by coalesce(document_date, ${DATE_FLOOR}::date) desc, id desc
       limit ${pageSize}
     ` as unknown as Promise<RowList<Row[]>>,
     sql`
@@ -167,6 +167,7 @@ export async function getStoredFile(
   id: string,
   withContent = false,
 ): Promise<StoredFile | null> {
+  if (!/^\d+$/.test(id)) return null;
   const sql = db();
   const contentExpr: Fragment = withContent
     ? sql`content_text`
@@ -176,7 +177,7 @@ export async function getStoredFile(
            document_date::text as document_date, uploaded_at::text as uploaded_at,
            size_bytes, content_type, ${contentExpr}
     from file_vault.stored_files
-    where id::text = ${id}
+    where id = ${id}::bigint
     limit 1
   `;
   if (!rows.length) return null;

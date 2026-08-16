@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { RecordingRow, RecordingSearchResponse } from "@/lib/types";
-import { formatDuration } from "@/lib/xml";
+import { formatBytes } from "@/lib/xml";
 
 const ROW_H = 36;
 const OVERSCAN = 10;
@@ -185,8 +185,8 @@ export function RecordingsSearch({ canPlay }: { canPlay: boolean }) {
           className="rounded-md border border-edge bg-surface-1 px-2 py-2 text-xs outline-none focus:border-accent-dim"
         >
           <option value="">Any direction</option>
-          <option value="inbound">Inbound</option>
-          <option value="outbound">Outbound</option>
+          <option value="incoming">Incoming</option>
+          <option value="outgoing">Outgoing</option>
         </select>
         <input
           type="date"
@@ -216,10 +216,9 @@ export function RecordingsSearch({ canPlay }: { canPlay: boolean }) {
       <div className="flex items-center gap-2 border-b border-edge px-3 pb-1.5 font-mono text-[10px] tracking-widest text-ink-faint uppercase">
         <span className="w-36">Started</span>
         <span className="w-16">Dir</span>
-        <span className="w-32">From</span>
-        <span className="w-32">To</span>
+        <span className="w-40">Other party</span>
         <span className="w-12">Ext</span>
-        <span className="w-14 text-right">Length</span>
+        <span className="w-16 text-right">Size</span>
         <span className="ml-auto" />
       </div>
 
@@ -262,20 +261,17 @@ export function RecordingsSearch({ canPlay }: { canPlay: boolean }) {
                 </span>
                 <span
                   className={`w-16 ${
-                    row.direction?.toLowerCase() === "inbound"
-                      ? "text-ok"
-                      : "text-link"
+                    row.direction === "incoming" ? "text-ok" : "text-link"
                   }`}
                 >
-                  {row.direction?.toLowerCase() ?? "—"}
+                  {row.direction ?? "—"}
                 </span>
-                <span className="w-32 truncate">{row.from_number ?? "—"}</span>
-                <span className="w-32 truncate">{row.to_number ?? "—"}</span>
+                <span className="w-40 truncate">{row.other_party ?? "—"}</span>
                 <span className="w-12 truncate text-ink-dim">
                   {row.extension ?? "—"}
                 </span>
-                <span className="w-14 text-right text-ink-dim">
-                  {formatDuration(row.duration_seconds)}
+                <span className="w-16 text-right text-ink-dim">
+                  {formatBytes(row.size_bytes)}
                 </span>
                 <span className="ml-auto flex gap-1">
                   {canPlay && row.stored_file_id && (
@@ -314,11 +310,13 @@ export function RecordingsSearch({ canPlay }: { canPlay: boolean }) {
         <div className="flex items-center gap-3 rounded-lg border border-edge bg-surface-1 px-3 py-2">
           <div className="min-w-0 font-mono text-[11px]">
             <div className="truncate text-ink">
-              {playing.from_number ?? "?"} → {playing.to_number ?? "?"}
+              {playing.direction === "incoming"
+                ? `${playing.other_party ?? "?"} → ext ${playing.extension ?? "?"}`
+                : `ext ${playing.extension ?? "?"} → ${playing.other_party ?? "?"}`}
             </div>
             <div className="text-[10px] text-ink-faint">
               {playing.started_at?.slice(0, 16)} ·{" "}
-              {formatDuration(playing.duration_seconds)}
+              {formatBytes(playing.size_bytes)}
             </div>
           </div>
           <audio ref={audioRef} controls className="h-8 flex-1" />

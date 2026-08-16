@@ -2,14 +2,17 @@ import "server-only";
 import { db } from "./db";
 import type { RecordingRow, RecordingSearchResponse } from "./types";
 
-// Assumed column names on file_vault.call_recordings (adjust here if the
-// production schema differs): id, object_key, from_number, to_number,
-// direction, extension, started_at, duration_seconds, recording_id.
-// stored_files supplies the playable object via bucket+object_key.
+// file_vault.call_recordings is a view over stored_files
+// (bucket = 'acid-call-recordings'), so `id` is the stored_files id the
+// play/download routes need. Call metadata lives in the `meta` jsonb:
+// other_party, extension, and direction — 'outgoing'/'incoming' from the
+// RingCentral loader plus a small 'Outbound'/'Inbound' batch from OneDrive
+// (those rows have no other_party, so phone search cannot match them).
+// call_started_at is computed by the view; there is no duration column.
 
 export type RecordingSearchParams = {
   phone: string; // raw user input; digits are extracted here
-  direction: string | null;
+  direction: string | null; // 'incoming' | 'outgoing'
   dateFrom: string | null;
   dateTo: string | null;
   cursor: string | null;
@@ -34,8 +37,8 @@ function decodeCursor(
     const { t, i } = JSON.parse(
       Buffer.from(cursor, "base64url").toString("utf8"),
     ) as { t: string | null; i: string };
-    if (typeof i !== "string") return null;
-    const ts = t ?? "0001-01-01 00:00:00";
+    if (typeof i !== "string" || !/^\d+$/.test(i)) return null;
+    const ts = t ?? TS_FLOOR;
     if (!/^[\d\s:.T+-]{10,32}$/.test(ts)) return null;
     return { t: ts, i };
   } catch {
@@ -43,7 +46,7 @@ function decodeCursor(
   }
 }
 
-const TS_FLOOR = "0001-01-01 00:00:00";
+const TS_FLOOR = "0001-01-01 00:00:00+00";
 
 // 318k rows: always keyset-paginated, page size capped at 100.
 export async function searchRecordings(
@@ -55,35 +58,47 @@ export async function searchRecordings(
 
   const conds = [sql`true`];
   if (digits.length >= 7) {
-    const suffix = `%${digits}`;
+    // The other_party number is embedded verbatim in file_name, which has a
+    // trigram index — use it as an indexed prefilter, then suffix-match the
+    // actual number.
+    conds.push(sql`cr.file_name like ${"%" + digits + "%"}`);
     conds.push(
-      sql`(regexp_replace(coalesce(cr.from_number, ''), '\\D', '', 'g') like ${suffix}
-        or regexp_replace(coalesce(cr.to_number, ''), '\\D', '', 'g') like ${suffix})`,
+      sql`regexp_replace(coalesce(cr.meta->>'other_party', ''), '\\D', '', 'g')
+        like ${"%" + digits}`,
     );
   }
-  if (p.direction) conds.push(sql`lower(cr.direction) = ${p.direction.toLowerCase()}`);
-  if (p.dateFrom) conds.push(sql`cr.started_at >= ${p.dateFrom}::date`);
-  if (p.dateTo) conds.push(sql`cr.started_at < (${p.dateTo}::date + 1)`);
+  if (p.direction === "incoming") {
+    conds.push(sql`lower(cr.meta->>'direction') in ('incoming', 'inbound')`);
+  } else if (p.direction === "outgoing") {
+    conds.push(sql`lower(cr.meta->>'direction') in ('outgoing', 'outbound')`);
+  }
+  if (p.dateFrom) conds.push(sql`cr.call_started_at >= ${p.dateFrom}::date`);
+  if (p.dateTo) conds.push(sql`cr.call_started_at < (${p.dateTo}::date + 1)`);
   const where = conds.reduce((a, b) => sql`${a} and ${b}`);
 
   const cur = decodeCursor(p.cursor);
   const cursorCond = cur
-    ? sql`and (coalesce(cr.started_at, ${TS_FLOOR}::timestamp), cr.id::text)
-          < (${cur.t}::timestamp, ${cur.i})`
+    ? sql`and (coalesce(cr.call_started_at, ${TS_FLOOR}::timestamptz), cr.id)
+          < (${cur.t}::timestamptz, ${cur.i}::bigint)`
     : sql``;
 
   const [rows, totalRows] = await Promise.all([
     sql`
       select cr.id::text as id,
-             sf.id::text as stored_file_id,
-             cr.from_number, cr.to_number, cr.direction, cr.extension::text as extension,
-             cr.started_at::text as started_at,
-             cr.duration_seconds, cr.recording_id::text as recording_id
+             cr.id::text as stored_file_id,
+             cr.meta->>'other_party' as other_party,
+             case
+               when lower(cr.meta->>'direction') in ('incoming', 'inbound') then 'incoming'
+               when lower(cr.meta->>'direction') in ('outgoing', 'outbound') then 'outgoing'
+               else lower(cr.meta->>'direction')
+             end as direction,
+             cr.meta->>'extension' as extension,
+             cr.call_started_at::text as started_at,
+             cr.size_bytes,
+             cr.rc_recording_id as recording_id
       from file_vault.call_recordings cr
-      left join file_vault.stored_files sf
-        on sf.bucket = 'acid-call-recordings' and sf.object_key = cr.object_key
       where ${where} ${cursorCond}
-      order by coalesce(cr.started_at, ${TS_FLOOR}::timestamp) desc, cr.id::text desc
+      order by coalesce(cr.call_started_at, ${TS_FLOOR}::timestamptz) desc, cr.id desc
       limit ${pageSize}
     `,
     sql`
@@ -96,8 +111,7 @@ export async function searchRecordings(
   const recRows: RecordingRow[] = (rows as unknown as RecordingRow[]).map(
     (r) => ({
       ...r,
-      duration_seconds:
-        r.duration_seconds == null ? null : Number(r.duration_seconds),
+      size_bytes: r.size_bytes == null ? null : Number(r.size_bytes),
     }),
   );
 
