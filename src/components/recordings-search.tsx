@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { RecordingRow, RecordingSearchResponse } from "@/lib/types";
 import { formatDuration } from "@/lib/xml";
 
@@ -8,7 +9,8 @@ const ROW_H = 36;
 const OVERSCAN = 10;
 
 export function RecordingsSearch({ canPlay }: { canPlay: boolean }) {
-  const [phone, setPhone] = useState("");
+  const initial = useSearchParams();
+  const [phone, setPhone] = useState(initial.get("phone") ?? "");
   const [direction, setDirection] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");

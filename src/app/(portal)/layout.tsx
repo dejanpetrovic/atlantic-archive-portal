@@ -1,5 +1,6 @@
 import { atLeast, getNavLevels, isAdmin, requireUser } from "@/lib/authz";
 import { NavLinks, type NavItem } from "@/components/nav-links";
+import { CommandPalette } from "@/components/command-palette";
 import Link from "next/link";
 import { logout } from "@/app/login/actions";
 
@@ -39,6 +40,9 @@ export default async function PortalLayout({
           </Link>
           <NavLinks items={items} />
           <div className="ml-auto flex items-center gap-3">
+            <kbd className="hidden rounded border border-edge bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] text-ink-faint sm:block">
+              ⌘K
+            </kbd>
             <span className="hidden font-mono text-[11px] text-ink-faint sm:block">
               {user.email}
             </span>
@@ -56,6 +60,17 @@ export default async function PortalLayout({
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5">
         {children}
       </main>
+      <CommandPalette
+        surfaces={{
+          documents: atLeast(levels["acid-retailer-docs"], "search"),
+          po:
+            atLeast(levels["acid-retailer-docs"], "search") ||
+            atLeast(levels["acid-order-docs"], "search"),
+          orderDocs: atLeast(levels["acid-order-docs"], "search"),
+          recordings: atLeast(levels["acid-call-recordings"], "search"),
+          admin: isAdmin(levels),
+        }}
+      />
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { atLeast, requireLevelOrHome, requireUser } from "@/lib/authz";
 import { RecordingsSearch } from "@/components/recordings-search";
@@ -12,5 +13,9 @@ export default async function RecordingsPage() {
     "search",
   );
 
-  return <RecordingsSearch canPlay={atLeast(level, "download")} />;
+  return (
+    <Suspense>
+      <RecordingsSearch canPlay={atLeast(level, "download")} />
+    </Suspense>
+  );
 }
