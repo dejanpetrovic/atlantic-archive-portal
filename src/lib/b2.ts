@@ -4,6 +4,7 @@ import "server-only";
 // short-lived download authorizations and the browser fetches from B2.
 
 type B2Auth = {
+  accountId: string;
   apiUrl: string;
   downloadUrl: string;
   token: string;
@@ -39,6 +40,7 @@ async function authorize(force = false): Promise<B2Auth> {
   };
 
   const auth: B2Auth = {
+    accountId: data.accountId,
     apiUrl: data.apiInfo.storageApi.apiUrl,
     downloadUrl: data.apiInfo.storageApi.downloadUrl,
     token: data.authorizationToken,
@@ -57,13 +59,18 @@ async function bucketId(auth: B2Auth, bucketName: string): Promise<string> {
   const res = await fetch(`${auth.apiUrl}/b2api/v3/b2_list_buckets`, {
     method: "POST",
     headers: { Authorization: auth.token, "Content-Type": "application/json" },
+    // The accountId comes from the authorize response — env values here have
+    // proven error-prone (key ids look like account ids).
     body: JSON.stringify({
-      accountId: process.env.B2_ACCOUNT_ID,
+      accountId: auth.accountId,
       bucketName,
     }),
     cache: "no-store",
   });
-  if (!res.ok) throw new Error(`b2_list_buckets failed: ${res.status}`);
+  if (!res.ok)
+    throw new Error(
+      `b2_list_buckets failed: ${res.status} ${await res.text()}`,
+    );
   const data = (await res.json()) as {
     buckets: { bucketId: string; bucketName: string }[];
   };
