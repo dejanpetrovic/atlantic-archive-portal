@@ -87,6 +87,33 @@ export type SignedUrlOptions = {
   contentDisposition?: string;
 };
 
+// The nightly recordings loader writes B2 object names with the '+' stripped
+// from phone numbers while the DB object_key keeps it. Resolve the real key:
+// exact match first, then the stripped variant. One list call per lookup.
+async function resolveObjectKey(
+  auth: B2Auth,
+  bucketName: string,
+  objectKey: string,
+): Promise<string> {
+  if (!objectKey.includes("+")) return objectKey;
+  const bid = await bucketId(auth, bucketName);
+  const exists = async (name: string) => {
+    const res = await fetch(`${auth.apiUrl}/b2api/v3/b2_list_file_names`, {
+      method: "POST",
+      headers: { Authorization: auth.token, "Content-Type": "application/json" },
+      body: JSON.stringify({ bucketId: bid, prefix: name, maxFileCount: 1 }),
+      cache: "no-store",
+    });
+    if (!res.ok) return false;
+    const data = (await res.json()) as { files: { fileName: string }[] };
+    return data.files?.[0]?.fileName === name;
+  };
+  if (await exists(objectKey)) return objectKey;
+  const stripped = objectKey.replaceAll("+", "");
+  if (await exists(stripped)) return stripped;
+  return objectKey; // let the download 404 loudly rather than guess further
+}
+
 // Time-limited signed URL for one object, served directly by B2.
 export async function getSignedDownloadUrl(
   bucketName: string,
@@ -94,6 +121,7 @@ export async function getSignedDownloadUrl(
   { validSeconds = 600, contentDisposition }: SignedUrlOptions = {},
 ): Promise<string> {
   let auth = await authorize();
+  objectKey = await resolveObjectKey(auth, bucketName, objectKey);
 
   const mint = async (a: B2Auth) => {
     const body: Record<string, unknown> = {

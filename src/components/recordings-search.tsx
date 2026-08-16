@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { RecordingRow, RecordingSearchResponse } from "@/lib/types";
-import { formatBytes } from "@/lib/xml";
+import { formatBytes, formatDuration } from "@/lib/xml";
 
 const ROW_H = 36;
 const OVERSCAN = 10;
@@ -217,7 +217,8 @@ export function RecordingsSearch({ canPlay }: { canPlay: boolean }) {
         <span className="w-36">Started</span>
         <span className="w-16">Dir</span>
         <span className="w-40">Other party</span>
-        <span className="w-12">Ext</span>
+        <span className="w-28">Agent</span>
+        <span className="w-12 text-right">Dur</span>
         <span className="w-16 text-right">Size</span>
         <span className="ml-auto" />
       </div>
@@ -269,8 +270,13 @@ export function RecordingsSearch({ canPlay }: { canPlay: boolean }) {
                 <span className="w-40 truncate font-mono">
                   {row.other_party ?? "—"}
                 </span>
-                <span className="w-12 truncate text-ink-dim">
-                  {row.extension ?? "—"}
+                <span className="w-28 truncate text-ink-dim">
+                  {row.agent ?? "—"}
+                </span>
+                <span className="w-12 text-right text-ink-dim">
+                  {row.duration_seconds != null
+                    ? formatDuration(row.duration_seconds)
+                    : "—"}
                 </span>
                 <span className="w-16 text-right text-ink-dim">
                   {formatBytes(row.size_bytes)}
@@ -313,12 +319,14 @@ export function RecordingsSearch({ canPlay }: { canPlay: boolean }) {
           <div className="min-w-0 font-mono text-xs">
             <div className="truncate text-ink">
               {playing.direction === "incoming"
-                ? `${playing.other_party ?? "?"} → ext ${playing.extension ?? "?"}`
-                : `ext ${playing.extension ?? "?"} → ${playing.other_party ?? "?"}`}
+                ? `${playing.other_party ?? "?"} → ${playing.agent ?? "?"}`
+                : `${playing.agent ?? "?"} → ${playing.other_party ?? "?"}`}
             </div>
             <div className="text-[11px] text-ink-faint">
               {playing.started_at?.slice(0, 16)} ·{" "}
-              {formatBytes(playing.size_bytes)}
+              {playing.duration_seconds != null
+                ? formatDuration(playing.duration_seconds)
+                : formatBytes(playing.size_bytes)}
             </div>
           </div>
           <audio ref={audioRef} controls className="h-8 flex-1" />

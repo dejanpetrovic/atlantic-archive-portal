@@ -4,11 +4,13 @@ import type { RecordingRow, RecordingSearchResponse } from "./types";
 
 // file_vault.call_recordings is a view over stored_files
 // (bucket = 'acid-call-recordings'), so `id` is the stored_files id the
-// play/download routes need. Call metadata lives in the `meta` jsonb:
-// other_party, extension, and direction — 'outgoing'/'incoming' from the
-// RingCentral loader plus a small 'Outbound'/'Inbound' batch from OneDrive
-// (those rows have no other_party, so phone search cannot match them).
-// call_started_at is computed by the view; there is no duration column.
+// play/download routes need. Call metadata lives in the `meta` jsonb, in
+// two dialects:
+//  - backfill (through 2026-08-05): other_party, extension, lowercase
+//    direction ('outgoing'/'incoming'); no duration.
+//  - nightly (2026-08-06+): from_number, to_number, from_name,
+//    duration_sec, extension_id, direction 'Outbound'/'Inbound'.
+// Every projection below coalesces across both.
 
 export type RecordingSearchParams = {
   phone: string; // raw user input; digits are extracted here
@@ -58,13 +60,17 @@ export async function searchRecordings(
 
   const conds = [sql`true`];
   if (digits.length >= 7) {
-    // The other_party number is embedded verbatim in file_name, which has a
-    // trigram index — use it as an indexed prefilter, then suffix-match the
-    // actual number.
+    // Both dialects embed the numbers in file_name, which has a trigram
+    // index — use it as an indexed prefilter, then suffix-match the actual
+    // number fields of either dialect.
     conds.push(sql`cr.file_name like ${"%" + digits + "%"}`);
     conds.push(
-      sql`regexp_replace(coalesce(cr.meta->>'other_party', ''), '\\D', '', 'g')
-        like ${"%" + digits}`,
+      sql`(regexp_replace(coalesce(cr.meta->>'other_party', ''), '\\D', '', 'g')
+          like ${"%" + digits}
+        or regexp_replace(coalesce(cr.meta->>'from_number', ''), '\\D', '', 'g')
+          like ${"%" + digits}
+        or regexp_replace(coalesce(cr.meta->>'to_number', ''), '\\D', '', 'g')
+          like ${"%" + digits})`,
     );
   }
   if (p.direction === "incoming") {
@@ -86,13 +92,27 @@ export async function searchRecordings(
     sql`
       select cr.id::text as id,
              cr.id::text as stored_file_id,
-             cr.meta->>'other_party' as other_party,
+             coalesce(
+               cr.meta->>'other_party',
+               case
+                 when lower(cr.meta->>'direction') in ('outgoing', 'outbound')
+                   then cr.meta->>'to_number'
+                 else cr.meta->>'from_number'
+               end
+             ) as other_party,
              case
                when lower(cr.meta->>'direction') in ('incoming', 'inbound') then 'incoming'
                when lower(cr.meta->>'direction') in ('outgoing', 'outbound') then 'outgoing'
                else lower(cr.meta->>'direction')
              end as direction,
-             cr.meta->>'extension' as extension,
+             coalesce(
+               nullif(cr.meta->>'extension', ''),
+               nullif(cr.meta->>'from_name', '')
+             ) as agent,
+             case
+               when cr.meta->>'duration_sec' ~ '^\\d+$'
+                 then (cr.meta->>'duration_sec')::int
+             end as duration_seconds,
              cr.call_started_at::text as started_at,
              cr.size_bytes,
              cr.rc_recording_id as recording_id
@@ -112,6 +132,8 @@ export async function searchRecordings(
     (r) => ({
       ...r,
       size_bytes: r.size_bytes == null ? null : Number(r.size_bytes),
+      duration_seconds:
+        r.duration_seconds == null ? null : Number(r.duration_seconds),
     }),
   );
 

@@ -27,8 +27,11 @@ export type RecordingRow = {
   stored_file_id: string | null;
   other_party: string | null;
   direction: string | null;
-  extension: string | null;
+  /** Backfill rows: extension number. Nightly rows: agent name. */
+  agent: string | null;
   started_at: string | null;
+  /** Nightly rows only; backfill rows genuinely have no duration. */
+  duration_seconds: number | null;
   size_bytes: number | null;
   recording_id: string | null;
 };

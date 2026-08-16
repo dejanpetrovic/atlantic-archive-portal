@@ -4,6 +4,15 @@ import type { Metadata } from "next";
 import { atLeast, requireLevelOrHome, requireUser } from "@/lib/authz";
 import { getStoredFile } from "@/lib/documents";
 import { formatBytes } from "@/lib/xml";
+import {
+  PREVIEW_MAX_BYTES,
+  PREVIEW_MAX_ROWS,
+  fetchSheetPreview,
+  fileExtension,
+  previewKind,
+} from "@/lib/preview";
+import { SheetTable } from "@/components/sheet-table";
+import { logAccess } from "@/lib/log";
 
 export const metadata: Metadata = { title: "Order doc" };
 
@@ -22,9 +31,22 @@ export default async function OrderDocPage({
 
   const level = await requireLevelOrHome(user.id, "acid-order-docs", "search");
   const canDownload = atLeast(level, "download");
-  const isPdf =
-    file.content_type?.includes("pdf") ||
-    file.object_key.toLowerCase().endsWith(".pdf");
+  const kind = previewKind(file.object_key, file.content_type);
+
+  // CSV/XLSX are parsed server-side (bounded 5 MB exception to the no-proxy
+  // rule); images and PDFs stream direct from B2 via the inline route, which
+  // does its own view logging.
+  let sheets = null;
+  if (canDownload && kind === "sheet") {
+    sheets = await fetchSheetPreview(
+      file.bucket,
+      file.object_key,
+      file.size_bytes,
+    );
+    if (sheets) {
+      await logAccess(user.id, "view", file.bucket, file.object_key);
+    }
+  }
 
   return (
     <div className="flex h-[calc(100vh-6.5rem)] flex-col gap-3">
@@ -73,7 +95,12 @@ export default async function OrderDocPage({
         {file.object_key}
       </p>
 
-      {canDownload && isPdf ? (
+      {!canDownload ? (
+        <div className="rounded-lg border border-edge bg-surface-1 py-16 text-center text-ink-faint">
+          Your access level allows metadata only. Ask your admin for download
+          access to view files.
+        </div>
+      ) : kind === "pdf" ? (
         // The iframe hits the inline route, which re-checks authorization,
         // logs the view and 302s to a signed B2 URL — bytes never touch us.
         <iframe
@@ -81,13 +108,53 @@ export default async function OrderDocPage({
           title={file.object_key}
           className="min-h-0 w-full flex-1 rounded-lg border border-edge bg-surface-1"
         />
+      ) : kind === "image" ? (
+        // Same mechanism as audio/PDF: the <img> fetches the inline route,
+        // which logs the view and redirects to a signed B2 URL.
+        <div className="min-h-0 flex-1 overflow-auto rounded-lg border border-edge bg-surface-1 p-4">
+          <a
+            href={`/api/files/${file.id}/inline`}
+            target="_blank"
+            rel="noreferrer"
+            title="Open full size"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`/api/files/${file.id}/inline`}
+              alt={file.object_key}
+              className="max-h-full max-w-full rounded"
+            />
+          </a>
+        </div>
+      ) : kind === "sheet" && sheets ? (
+        <SheetTable sheets={sheets} maxRows={PREVIEW_MAX_ROWS} />
       ) : (
-        <div className="rounded-lg border border-edge bg-surface-1 py-16 text-center text-ink-faint">
-          {canDownload
-            ? "Preview not available for this file type — use Download."
-            : "Your access level allows metadata only. Ask your admin for download access to view files."}
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-lg border border-edge bg-surface-1 py-16 text-center">
+          <FileIcon label={fileExtension(file.object_key)} />
+          <p className="text-xs text-ink-faint">
+            {kind === "sheet"
+              ? `File exceeds the ${Math.round(PREVIEW_MAX_BYTES / 1024 / 1024)} MB preview cap — use Download.`
+              : "No inline preview for this file type — use Download."}
+          </p>
         </div>
       )}
+    </div>
+  );
+}
+
+function FileIcon({ label }: { label: string }) {
+  return (
+    <div className="relative">
+      <svg width="44" height="56" viewBox="0 0 44 56" fill="none" aria-hidden>
+        <path
+          d="M4 4a4 4 0 0 1 4-4h20l12 12v36a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V4z"
+          className="fill-surface-3"
+        />
+        <path d="M28 0l12 12H30a2 2 0 0 1-2-2V0z" className="fill-edge-strong" />
+      </svg>
+      <span className="absolute inset-x-0 bottom-3 text-center font-mono text-[11px] font-semibold text-ink-dim">
+        {label}
+      </span>
     </div>
   );
 }
